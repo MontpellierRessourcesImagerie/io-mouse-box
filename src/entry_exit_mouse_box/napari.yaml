@@ -1,0 +1,37 @@
+name: entry-exit-mouse-box
+display_name: Entry/Exit mouse in box
+# use 'hidden' to remove plugin from napari hub search results
+visibility: public
+# see https://napari.org/stable/plugins/manifest.html for valid categories
+categories: ["Annotation", "Segmentation", "Acquisition"]
+contributions:
+  commands:
+    - id: entry-exit-mouse-box.get_reader
+      python_name: entry_exit_mouse_box._reader:napari_get_reader
+      title: Open data with Entry/Exit mouse in box
+    - id: entry-exit-mouse-box.make_container_widget
+      python_name: entry_exit_mouse_box:ImageThreshold
+      title: Make threshold Container widget
+    - id: entry-exit-mouse-box.make_magic_widget
+      python_name: entry_exit_mouse_box:threshold_magic_widget
+      title: Make threshold magic widget
+    - id: entry-exit-mouse-box.make_function_widget
+      python_name: entry_exit_mouse_box:threshold_autogenerate_widget
+      title: Make threshold function widget
+    - id: entry-exit-mouse-box.make_qwidget
+      python_name: entry_exit_mouse_box:ExampleQWidget
+      title: Make example QWidget
+  readers:
+    - command: entry-exit-mouse-box.get_reader
+      accepts_directories: false
+      filename_patterns: ['*.npy']
+  widgets:
+    - command: entry-exit-mouse-box.make_container_widget
+      display_name: Container Threshold
+    - command: entry-exit-mouse-box.make_magic_widget
+      display_name: Magic Threshold
+    - command: entry-exit-mouse-box.make_function_widget
+      autogenerate: true
+      display_name: Autogenerate Threshold
+    - command: entry-exit-mouse-box.make_qwidget
+      display_name: Example QWidget
