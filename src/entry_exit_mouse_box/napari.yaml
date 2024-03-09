@@ -1,37 +1,30 @@
 name: entry-exit-mouse-box
+
 display_name: Entry/Exit mouse in box
-# use 'hidden' to remove plugin from napari hub search results
+
 visibility: public
-# see https://napari.org/stable/plugins/manifest.html for valid categories
+
 categories: ["Annotation", "Segmentation", "Acquisition"]
+
+description: |
+  This plugin provides a widget to annotate the entry and exit of a mouse in a box.
+  The widget allows to visualize the video and to annotate the entry and exit of the mouse.
+  The annotations are saved in a CSV file.
+  The plugin also provides a reader to open the video file in napari.
+  The reader is able to read the video file and the CSV file with the annotations.
+
 contributions:
   commands:
     - id: entry-exit-mouse-box.get_reader
       python_name: entry_exit_mouse_box._reader:napari_get_reader
       title: Open data with Entry/Exit mouse in box
-    - id: entry-exit-mouse-box.make_container_widget
-      python_name: entry_exit_mouse_box:ImageThreshold
-      title: Make threshold Container widget
-    - id: entry-exit-mouse-box.make_magic_widget
-      python_name: entry_exit_mouse_box:threshold_magic_widget
-      title: Make threshold magic widget
-    - id: entry-exit-mouse-box.make_function_widget
-      python_name: entry_exit_mouse_box:threshold_autogenerate_widget
-      title: Make threshold function widget
-    - id: entry-exit-mouse-box.make_qwidget
-      python_name: entry_exit_mouse_box:ExampleQWidget
-      title: Make example QWidget
+    - id: entry-exit-mouse-box.mouse_in_out_widget
+      python_name: entry_exit_mouse_box:MouseInOutWidget
+      title: Mouse in/out widget
   readers:
     - command: entry-exit-mouse-box.get_reader
       accepts_directories: false
-      filename_patterns: ['*.npy']
+      filename_patterns: ['*.mp4', '*.avi', '*.mov', '*flv']
   widgets:
-    - command: entry-exit-mouse-box.make_container_widget
-      display_name: Container Threshold
-    - command: entry-exit-mouse-box.make_magic_widget
-      display_name: Magic Threshold
-    - command: entry-exit-mouse-box.make_function_widget
-      autogenerate: true
-      display_name: Autogenerate Threshold
-    - command: entry-exit-mouse-box.make_qwidget
-      display_name: Example QWidget
+    - command: entry-exit-mouse-box.mouse_in_out_widget
+      display_name: Mouse I/O Box
