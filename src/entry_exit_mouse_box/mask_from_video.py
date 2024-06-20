@@ -6,11 +6,10 @@ import tifffile
 import numpy as np
 from concurrent.futures import ThreadPoolExecutor
 import time
-from queue import Queue
 
 
 class MaskFromBackground(object):
-    def __init__(self, input_video_path, output_video_path, ref, tr=75, st=10, frame_count=64):
+    def __init__(self, input_video_path, output_video_path, ref, tr=75, st={}, r=None, frame_count=64):
         self.input_video_path = input_video_path
         self.output_video_path = output_video_path
         self.frame_count = frame_count
@@ -29,6 +28,7 @@ class MaskFromBackground(object):
         self.total = int(self.ttl_frames/frame_count)+1
         self.start = st
         self.reader_pos = 0
+        self.regions = np.zeros((ref.shape[0], ref.shape[1]), np.uint8) if r is None else r
 
     def read_frames(self):
         frames = []
@@ -42,7 +42,7 @@ class MaskFromBackground(object):
             frames.append(frame)
         return (p1, p2), frames
 
-    def process_frames(self, batch, frames):
+    def _process_frames(self, batch, frames):
         buffer_out = []
         for i, frame in enumerate(frames):
             if batch[0] + i < self.start:
@@ -50,6 +50,19 @@ class MaskFromBackground(object):
             else:
                 processed_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY).astype(np.float32)
                 diff = np.abs(processed_frame - self.reference) > self.threshold
+            buffer_out.append(diff)
+        return buffer_out
+    
+    def process_frames(self, batch, frames):
+        buffer_out = []
+        for i, frame in enumerate(frames):
+            bw_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY).astype(np.float32)
+            mask = np.zeros(bw_frame.shape, bool)
+            pos = batch[0] + i
+            for lbl, start in self.start.items():
+                if pos >= start:
+                    mask[self.regions == lbl] = True
+            diff = np.logical_and(np.abs(bw_frame - self.reference) > self.threshold, mask)
             buffer_out.append(diff)
         return buffer_out
 
@@ -103,16 +116,17 @@ class QtWorkerMFV(QObject):
 
     mask_ready = pyqtSignal(str)
 
-    def __init__(self, in_path, out_path, ref, t, s):
+    def __init__(self, in_path, out_path, ref, t, s, r):
         super().__init__()
         self.in_path   = in_path
         self.out_path  = out_path
         self.ref       = ref
         self.threshold = t
         self.start     = s
+        self.regions   = r
 
     def run(self):
-        mfb = MaskFromBackground(self.in_path, self.out_path, self.ref, self.threshold, self.start)
+        mfb = MaskFromBackground(self.in_path, self.out_path, self.ref, self.threshold, self.start, self.regions)
         mfb.start_processing()
         self.mask_ready.emit(self.out_path)
 

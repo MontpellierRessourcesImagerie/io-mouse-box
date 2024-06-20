@@ -22,6 +22,7 @@ class MediaManager:
         self.current_frame = -1 # True index, not the displayed index (starts at 0)
         self.viewer        = viewer # Instance of the Napari viewer
         self.logger        = None
+        self.active        = False
 
     def __del__(self):
         self.release()
@@ -30,6 +31,7 @@ class MediaManager:
         self.logger = logger
 
     def release(self):
+        self.active = False
         for source in self.sources:
             _, capture, _, _, _ = source
             capture.release()
@@ -101,6 +103,8 @@ class MediaManager:
         Returns:
             The properties of the last video added under the form of a dictionary.
         """
+        self.active = True
+
         if not os.path.exists(file_path):
             raise FileNotFoundError(f"ERROR: File not found at {file_path}")
         
@@ -171,7 +175,10 @@ class MediaManager:
 
     def set_frame(self, frame_target):
         if len(self.sources) == 0:
-            raise ValueError("ERROR: No media opened.")
+            if self.active:
+                raise ValueError("ERROR: No media opened.")
+            else:
+                return
         
         frame_number = int(frame_target)
         frame_number = max(0, frame_number)
