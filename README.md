@@ -1,4 +1,4 @@
-# entry-exit-mouse-box
+# Entry/exit mouse in box
 
 [![License MIT](https://img.shields.io/pypi/l/entry-exit-mouse-box.svg?color=green)](https://github.com/MontpellierRessourcesImagerie/entry-exit-mouse-box/raw/main/LICENSE)
 [![PyPI](https://img.shields.io/pypi/v/entry-exit-mouse-box.svg?color=green)](https://pypi.org/project/entry-exit-mouse-box)
@@ -7,7 +7,7 @@
 [![codecov](https://codecov.io/gh/MontpellierRessourcesImagerie/entry-exit-mouse-box/branch/main/graph/badge.svg)](https://codecov.io/gh/MontpellierRessourcesImagerie/entry-exit-mouse-box)
 [![napari hub](https://img.shields.io/endpoint?url=https://api.napari-hub.org/shields/entry-exit-mouse-box)](https://napari-hub.org/plugins/entry-exit-mouse-box)
 
-A Napari plugin allowing to segment and analyze the position of mice running in boxes.
+A Napari plugin allowing to segment and analyze the position of mice running in and out boxes.
 
 ----------------------------------
 
