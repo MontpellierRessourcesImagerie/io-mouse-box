@@ -39,17 +39,8 @@ To launch Napari, use the following command in your terminal after activating th
 +-----------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 
 
-2. Quick Demonstration
-------------------------------------------
 
-.. raw:: html
-
-    <video width="712px" height="400px" controls="controls">
-    <source src="../docs/demo.mp4" type="video/mp4" />
-    </video>
-
-
-3. Before Starting
+2. Before Starting
 ------------------------------------------
 
 - Ensure that your videos are in a compatible format. AVI is recommended, but MP4 is acceptable in some cases.
@@ -58,7 +49,7 @@ To launch Napari, use the following command in your terminal after activating th
 - Before proceeding, open Napari and activate the plugin by clicking on the "Plugins" menu (in the top bar), then selecting "Mouse in Box".
 
 
-4. Usage
+3. Usage
 ------------------------------------------
 
 a. Video Control

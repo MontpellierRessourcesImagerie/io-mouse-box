@@ -1,14 +1,29 @@
+# Configuration file for the Sphinx documentation builder.
+#
+# This file only contains a selection of the most common options. For a full
+# list see the documentation:
+# https://www.sphinx-doc.org/en/master/usage/configuration.html
+
+# -- Path setup --------------------------------------------------------------
+
+# If extensions (or modules to document with autodoc) are in another directory,
+# add these directories to sys.path here. If the directory is relative to the
+# documentation root, use os.path.abspath to make it absolute, like shown here.
+#
+
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath('./src'))
+mod_path = os.path.abspath('../src')
+print(mod_path)
+sys.path.insert(0, mod_path)
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'Mouse in box'
-copyright = '2024, CNRS, MRI-CIA'
-author = 'Clément H. Benedetti'
+project = 'Protoplasts swelling analyzer'
+copyright = '2024, Clément H. Benedetti'
+author = 'Clément H. BENEDETTI'
 
 # The full version, including alpha/beta/rc tags
 release = '1.0.0'
@@ -50,8 +65,8 @@ html_theme = 'sphinx_rtd_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
-html_favicon = '_static/favicon.ico'
+html_css_files = ['custom.css']
 
-# html_css_files = ['custom.css']
+html_favicon = 'icon.png'
 
 autosummary_generate = True
