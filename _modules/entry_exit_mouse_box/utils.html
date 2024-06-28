@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>entry_exit_mouse_box.utils &mdash; Protoplasts swelling analyzer 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/tabs.css?v=a5c4661c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=5b94cef0" />
+
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=8d563738"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/tabs.js?v=3030b3cb"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Protoplasts swelling analyzer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide.html">Quick Start: A User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../good_practices.html">Good practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Mouse in box functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Protoplasts swelling analyzer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">entry_exit_mouse_box.utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for entry_exit_mouse_box.utils</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">pint</span> <span class="kn">import</span> <span class="n">UnitRegistry</span>
+
+
+<div class="viewcode-block" id="cast_to_pixels">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.cast_to_pixels">[docs]</a>
+<span class="k">def</span> <span class="nf">cast_to_pixels</span><span class="p">(</span><span class="n">unit_str_src</span><span class="p">,</span> <span class="n">length_float_src</span><span class="p">,</span> <span class="n">unit_str_tgt</span><span class="p">,</span> <span class="n">scale_tgt</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts a length from its unit to the viewer&#39;s unit and then to pixels.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">    - unit_str_src: str The unit of the length to convert (ex: the pillar&#39;s unit).</span>
+<span class="sd">    - length_float_src: float The length to convert (ex: the diameter of the pillar).</span>
+<span class="sd">    - unit_str_tgt: str The unit of the viewer (ex: the calibration unit).</span>
+<span class="sd">    - scale_tgt: float The scale factor to convert the length to pixels (the calibration of the scalebar).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    - int The length in pixels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ureg</span> <span class="o">=</span> <span class="n">UnitRegistry</span><span class="p">()</span>
+
+    <span class="n">unit_tgt</span> <span class="o">=</span> <span class="n">ureg</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">(</span><span class="n">unit_str_tgt</span><span class="p">)</span>
+    <span class="n">unit_src</span> <span class="o">=</span> <span class="n">ureg</span><span class="o">.</span><span class="n">parse_expression</span><span class="p">(</span><span class="n">unit_str_src</span><span class="p">)</span>
+
+    <span class="n">length_src</span> <span class="o">=</span> <span class="n">length_float_src</span> <span class="o">*</span> <span class="n">unit_src</span>
+    <span class="n">length_tgt</span> <span class="o">=</span> <span class="n">length_src</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">unit_tgt</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">length_tgt</span><span class="o">.</span><span class="n">magnitude</span> <span class="o">/</span> <span class="n">scale_tgt</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="apply_lut">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.apply_lut">[docs]</a>
+<span class="k">def</span> <span class="nf">apply_lut</span><span class="p">(</span><span class="n">tags</span><span class="p">,</span> <span class="n">to_pass</span><span class="p">,</span> <span class="n">classes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    tags: Layer that will receive the LUT.</span>
+<span class="sd">    to_pass: List of gray levels to which we will have to bind a color.</span>
+<span class="sd">    classes: Dictionary of colors to bind to the gray levels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">lut</span> <span class="o">=</span> <span class="p">{</span><span class="n">i</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">256</span><span class="p">)}</span>
+    
+    <span class="k">for</span> <span class="n">index</span><span class="p">,</span> <span class="n">level</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">to_pass</span><span class="p">):</span>
+        <span class="n">color</span> <span class="o">=</span> <span class="n">classes</span><span class="p">[</span><span class="n">level</span><span class="p">]</span>
+        <span class="n">tpl</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">color</span><span class="p">[</span><span class="n">i</span><span class="p">])</span><span class="o">/</span><span class="mf">255.0</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">3</span><span class="p">)]</span> <span class="o">+</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span>
+        <span class="n">lut</span><span class="p">[</span><span class="n">index</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">tpl</span><span class="p">)</span>
+
+    <span class="n">tags</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="n">lut</span></div>
+
+
+
+<div class="viewcode-block" id="merge_close_points">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.merge_close_points">[docs]</a>
+<span class="k">def</span> <span class="nf">merge_close_points</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">min_distance</span><span class="p">,</span> <span class="n">dot_threshold</span><span class="o">=-</span><span class="mf">0.7</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Merge points in a 2D path that are closer than a specified minimum distance.</span>
+<span class="sd">    Points are merged into their average position. The operation preserves the path order</span>
+<span class="sd">    and does not merge non-consecutive points if the path crosses over itself.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    - path: A list or numpy array of 2D points (e.g., [[x1, y1], [x2, y2], ...]).</span>
+<span class="sd">    - min_distance: The minimum allowed distance between consecutive points.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    - A new list of points with no consecutive points closer than the minimum distance.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Convert path to numpy array for easier distance computations</span>
+    <span class="n">merged_path</span> <span class="o">=</span> <span class="p">[</span><span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">path</span><span class="p">)):</span>
+        <span class="n">current_point</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">last_merged_point</span> <span class="o">=</span> <span class="n">merged_path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">distance</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">last_merged_point</span> <span class="o">-</span> <span class="n">current_point</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">distance</span> <span class="o">&lt;</span> <span class="n">min_distance</span><span class="p">:</span>
+            <span class="n">potential_merge</span> <span class="o">=</span> <span class="p">(</span><span class="n">last_merged_point</span> <span class="o">+</span> <span class="n">current_point</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+            
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">merged_path</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">A</span> <span class="o">=</span> <span class="n">merged_path</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+                <span class="n">B</span> <span class="o">=</span> <span class="n">last_merged_point</span>
+                <span class="n">C</span> <span class="o">=</span> <span class="n">potential_merge</span>
+                
+                <span class="n">AB</span> <span class="o">=</span> <span class="n">B</span> <span class="o">-</span> <span class="n">A</span>
+                <span class="n">AC</span> <span class="o">=</span> <span class="n">C</span> <span class="o">-</span> <span class="n">A</span>
+                <span class="n">dot_product</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">AB</span><span class="p">,</span> <span class="n">AC</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">AB</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">AC</span><span class="p">))</span>
+                
+                <span class="k">if</span> <span class="n">dot_product</span> <span class="o">&gt;=</span> <span class="n">dot_threshold</span><span class="p">:</span>
+                    <span class="n">merged_path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">potential_merge</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">merged_path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_point</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">merged_path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">potential_merge</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">merged_path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current_point</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">merged_path</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="smooth_path_2d">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.smooth_path_2d">[docs]</a>
+<span class="k">def</span> <span class="nf">smooth_path_2d</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">window_size</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Smooth a path of 2D points using a simple moving average with a sliding window.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    - points: A NumPy array of 2D points, shape (n_points, 2).</span>
+<span class="sd">    - window_size: The size of the sliding window for the moving average.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    - A NumPy array of the smoothed 2D points.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">window_size</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">points</span> 
+
+    <span class="k">if</span> <span class="n">window_size</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">window_size</span> <span class="o">+=</span> <span class="mi">1</span>
+
+    <span class="n">pad_width</span> <span class="o">=</span> <span class="n">window_size</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="n">padded_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pad</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="p">((</span><span class="n">pad_width</span><span class="p">,</span> <span class="n">pad_width</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;edge&#39;</span><span class="p">)</span>
+
+    <span class="n">smoothed_points</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)):</span>
+        <span class="n">start_index</span> <span class="o">=</span> <span class="n">i</span>
+        <span class="n">end_index</span> <span class="o">=</span> <span class="n">i</span> <span class="o">+</span> <span class="n">window_size</span>
+        <span class="n">smoothed_points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">padded_points</span><span class="p">[</span><span class="n">start_index</span><span class="p">:</span><span class="n">end_index</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">smoothed_points</span></div>
+
+
+
+<div class="viewcode-block" id="setup_logger">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.setup_logger">[docs]</a>
+<span class="k">def</span> <span class="nf">setup_logger</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+    <span class="n">base_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">file_name_without_extension</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">base_name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="n">file_name_without_extension</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span> 
+    
+    <span class="n">fh</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">FileHandler</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="n">fh</span><span class="o">.</span><span class="n">setLevel</span><span class="p">(</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+    
+    <span class="n">formatter</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">Formatter</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%(asctime)s</span><span class="s1"> - </span><span class="si">%(name)s</span><span class="s1"> - </span><span class="si">%(levelname)s</span><span class="s1"> - </span><span class="si">%(message)s</span><span class="s1">&#39;</span><span class="p">)</span>
+    <span class="n">fh</span><span class="o">.</span><span class="n">setFormatter</span><span class="p">(</span><span class="n">formatter</span><span class="p">)</span>
+    
+    <span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">fh</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">logger</span></div>
+
+
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;/home/benedetti/Desktop/path.npy&#39;</span>
+    <span class="n">vertices_raw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">vertices_raw</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vertices_raw</span><span class="p">))</span>
+
+    <span class="n">vertices_simplified</span> <span class="o">=</span> <span class="n">merge_close_points</span><span class="p">(</span><span class="n">vertices_raw</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">vertices_simplified</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">vertices_simplified</span><span class="p">))</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Clément H. Benedetti.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

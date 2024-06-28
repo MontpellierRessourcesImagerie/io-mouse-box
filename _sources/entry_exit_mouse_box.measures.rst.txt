@@ -1,0 +1,7 @@
+entry\_exit\_mouse\_box.measures module
+=======================================
+
+.. automodule:: entry_exit_mouse_box.measures
+   :members:
+   :undoc-members:
+   :show-inheritance:

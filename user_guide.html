@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Quick Start: A User Guide &mdash; Protoplasts swelling analyzer 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="_static/tabs.css?v=a5c4661c" />
+      <link rel="stylesheet" type="text/css" href="_static/custom.css?v=5b94cef0" />
+
+  
+    <link rel="shortcut icon" href="_static/icon.png"/>
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=8d563738"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Good practices" href="good_practices.html" />
+    <link rel="prev" title="Welcome to Mouse in box’s documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Protoplasts swelling analyzer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Quick Start: A User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#install-the-plugin">1. Install the Plugin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#before-starting">2. Before Starting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">3. Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#a-video-control">a. Video Control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#b-experiment-duration">b. Experiment Duration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#c-box-control">c. Box Control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#d-calibration">d. Calibration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#e-tracking">e. Tracking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#f-the-results-table">f. The Results Table</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="good_practices.html">Good practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">Mouse in box functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Protoplasts swelling analyzer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Quick Start: A User Guide</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/user_guide.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="quick-start-a-user-guide">
+<h1>Quick Start: A User Guide<a class="headerlink" href="#quick-start-a-user-guide" title="Link to this heading"></a></h1>
+<section id="install-the-plugin">
+<h2>1. Install the Plugin<a class="headerlink" href="#install-the-plugin" title="Link to this heading"></a></h2>
+<p>All methods described below require that you have a Conda environment with Napari installed on your machine.
+If this is not yet the case, you can follow the instructions in the <a class="reference external" href="https://docs.anaconda.com/free/miniconda/index.html#latest-miniconda-installer-links">Miniconda documentation</a> to install Miniconda.</p>
+<p>Once Miniconda is installed, use the following commands in your terminal to create a new environment and install Napari:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create a new Conda environment</span>
+conda<span class="w"> </span>create<span class="w"> </span>-n<span class="w"> </span>mice-env<span class="w"> </span>-y<span class="w"> </span><span class="nv">python</span><span class="o">=</span><span class="m">3</span>.9
+
+<span class="c1"># Activate the new environment</span>
+conda<span class="w"> </span>activate<span class="w"> </span>mice-env
+
+<span class="c1"># Install Napari with all recommended dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span><span class="s1">&#39;napari[all]&#39;</span>
+
+<span class="c1"># Install additional required libraries from conda-forge</span>
+conda<span class="w"> </span>install<span class="w"> </span>-c<span class="w"> </span>conda-forge<span class="w"> </span>libstdcxx-ng
+</pre></div>
+</div>
+<p>To launch Napari, use the following command in your terminal after activating the correct environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>napari
+</pre></div>
+</div>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Instructions</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>With pip</p></td>
+<td><p>Launch your Conda environment, and type <code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">mouse-in-box</span></code>. The plugin should then appear in your plugins list.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Local install</p></td>
+<td><p>Navigate to the directory containing the plugin, enter it in your terminal, and run <code class="code docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.</span></code>.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="before-starting">
+<h2>2. Before Starting<a class="headerlink" href="#before-starting" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Ensure that your videos are in a compatible format. AVI is recommended, but MP4 is acceptable in some cases.</p></li>
+<li><p>Obtain a decent computer. A GPU is not required as it won’t be used, but at least 8GB of RAM and a decent CPU are recommended.</p></li>
+<li><p>Ensure there is ample free disk space. For a 500MB video, approximately 50MB of temporary files are created.</p></li>
+<li><p>Before proceeding, open Napari and activate the plugin by clicking on the “Plugins” menu (in the top bar), then selecting “Mouse in Box”.</p></li>
+</ul>
+</section>
+<section id="usage">
+<h2>3. Usage<a class="headerlink" href="#usage" title="Link to this heading"></a></h2>
+<section id="a-video-control">
+<h3>a. Video Control<a class="headerlink" href="#a-video-control" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>This section enables you to open a video, view its properties, and navigate through it.</p></li>
+<li><p>If you already have something opened in Napari, or if you have just analyzed a video, you can reset the plugin by clicking on the <code class="code docutils literal notranslate"><span class="pre">✨</span> <span class="pre">Clear</span> <span class="pre">state</span></code> button in the plugin’s interface.</p></li>
+<li><p>Click on the <code class="code docutils literal notranslate"><span class="pre">📂</span> <span class="pre">Select</span> <span class="pre">file</span></code> button and navigate to your video file.</p></li>
+<li><p>The properties of the video, such as name, duration, size, FPS, etc., should appear.</p></li>
+<li><p>Use the navigation tools described below to navigate through the video.</p></li>
+</ul>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Backward</p></td>
+<td><p>Jumps back 25 frames from the current position.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Forward</p></td>
+<td><p>Jumps forward 25 frames from the current position.</p></td>
+</tr>
+<tr class="row-even"><td><p>Time slider</p></td>
+<td><p>Allows free navigation through the video.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Frame input</p></td>
+<td><p>Allows navigation to a precise frame index within the video.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="b-experiment-duration">
+<h3>b. Experiment Duration<a class="headerlink" href="#b-experiment-duration" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Use the minute and second inputs to set the duration of the experiment.</p></li>
+<li><p>This duration applies individually to each box, from the “start” frame that we will define later.</p></li>
+</ul>
+</section>
+<section id="c-box-control">
+<h3>c. Box Control<a class="headerlink" href="#c-box-control" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>In this section, you will define the box(es) in which the mouse will be tracked.</p></li>
+<li><p>A box is defined exclusively by the area within which a mouse is considered visible.</p></li>
+<li><p>Start by using the left-click to pan and the mouse-wheel to zoom to position yourself correctly. You must see all the boxes as you won’t be able to move the viewer again until the starting frame of each box is set.</p></li>
+<li><p>Navigate in the video to a point where nothing obstructs the view of the boxes.</p></li>
+<li><dl class="simple">
+<dt>For each box:</dt><dd><ul>
+<li><p>Click on the <code class="code docutils literal notranslate"><span class="pre">🔵</span> <span class="pre">Add</span> <span class="pre">box</span></code> button.</p></li>
+<li><p>A new line should appear in the table below.</p></li>
+<li><p>Pick the color for the box, and rename it if you wish.</p></li>
+<li><p>In the left panel, choose the kind of polygon you want and draw the area where the mouse will be visible.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><p>Once all the boxes are drawn, navigate through the video to find, for each box, the first frame at which the mouse is in the box and nothing obstructs the view anymore. Click in the “Start” column once you find it.</p></li>
+<li><p>When each box has its starting frame, you can move the viewer again.</p></li>
+</ul>
+</section>
+<section id="d-calibration">
+<h3>d. Calibration<a class="headerlink" href="#d-calibration" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Now, we will set the calibration to export distances in physical units rather than pixels.</p></li>
+<li><p>Before continuing, measure something in the scene (e.g., the width of a box).</p></li>
+<li><p>Then, go to the left panel and add a new shapes layer. The button looks like a little polygon.</p></li>
+<li><p>Choose the “line” tool and draw a line over the distance you measured.</p></li>
+<li><p>In the “Calibration” section, enter the measured distance and the unit.</p></li>
+<li><p>You can now click the <code class="code docutils literal notranslate"><span class="pre">📏</span> <span class="pre">Apply</span> <span class="pre">calibration</span></code> button.</p></li>
+<li><p>At this point, due to the change from pixels to units, your image may appear either huge or extremely small. To center the view around your image, click the home button (the button with the little house, in the lower-left corner).</p></li>
+</ul>
+</section>
+<section id="e-tracking">
+<h3>e. Tracking<a class="headerlink" href="#e-tracking" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Start by navigating in the video to find a frame where an entire mouse is visible.</p></li>
+<li><p>As you did for calibration, add a new shapes layer but this time, use a polygon instead of a line.</p></li>
+<li><p>Draw a polygon over the mouse to represent the smallest area considered visible. Once complete, click the <code class="code docutils literal notranslate"><span class="pre">📏</span> <span class="pre">Set</span> <span class="pre">area</span></code> button.</p></li>
+<li><p>You can now click the <code class="code docutils literal notranslate"><span class="pre">♻️</span> <span class="pre">Clear</span> <span class="pre">background</span></code> button. Wait a few seconds. This operation will create a new hidden layer containing the reference image of the background.</p></li>
+<li><p>The button below is for launching tracking. Before clicking on it, you may adjust the threshold using the number input to its right. Tracking takes a couple of minutes.</p></li>
+<li><dl class="simple">
+<dt>You can then click on the <code class="code docutils literal notranslate"><span class="pre">📐</span> <span class="pre">Measure</span></code> button to start processing visibility, position, distance, session duration, etc. This is the longest operation.</dt><dd><ul>
+<li><p>Now, the background of a box is gray if the experiment has not started or is done, blue if the mouse is visible, and red if the mouse is hidden.</p></li>
+<li><p>A red line indicates the mouse’s path during this session.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>Finally, you can click on the <code class="code docutils literal notranslate"><span class="pre">📤</span> <span class="pre">Create</span> <span class="pre">results</span> <span class="pre">tables</span></code> button to generate two results tables for this experiment.</dt><dd><ul>
+<li><p>The first table contains visibility data for the mouse in each box for every frame.</p></li>
+<li><p>The second table (described more precisely in the next section) includes data for each session: duration, distance, visibility, and position.</p></li>
+</ul>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+<section id="f-the-results-table">
+<h3>f. The Results Table<a class="headerlink" href="#f-the-results-table" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>The sessions results table contains seven columns for each box.</p></li>
+<li><p>The first three columns cover sessions where the mouse is visible: “[V]”.</p></li>
+<li><p>The next three columns cover sessions where the mouse is hidden: “[H]”.</p></li>
+<li><p>The last column counts the number of times the mouse passed through the door during the entire experiment. Divide this number by 2 to get the number of times the mouse exited the box.</p></li>
+<li><p>To understand a mouse’s behavior, alternate between the first three columns and the next three as we alternate from visible to hidden sessions.</p></li>
+<li><p>If you combine the durations from both sets of columns, you should match the theoretical experiment duration specified in the plugin.</p></li>
+<li><p>The exported CSV uses semicolons (;) as separators.</p></li>
+</ul>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to Mouse in box’s documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="good_practices.html" class="btn btn-neutral float-right" title="Good practices" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Clément H. Benedetti.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

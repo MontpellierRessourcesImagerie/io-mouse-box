@@ -1,0 +1,7 @@
+entry\_exit\_mouse\_box.mask\_from\_video module
+================================================
+
+.. automodule:: entry_exit_mouse_box.mask_from_video
+   :members:
+   :undoc-members:
+   :show-inheritance:

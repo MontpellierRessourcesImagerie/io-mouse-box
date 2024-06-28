@@ -1,0 +1,7 @@
+entry\_exit\_mouse\_box.video\_mean\_processor module
+=====================================================
+
+.. automodule:: entry_exit_mouse_box.video_mean_processor
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>entry_exit_mouse_box.measures &mdash; Protoplasts swelling analyzer 1.0.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="../../_static/tabs.css?v=a5c4661c" />
+      <link rel="stylesheet" type="text/css" href="../../_static/custom.css?v=5b94cef0" />
+
+  
+    <link rel="shortcut icon" href="../../_static/icon.png"/>
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=8d563738"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/tabs.js?v=3030b3cb"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            Protoplasts swelling analyzer
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../user_guide.html">Quick Start: A User Guide</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../good_practices.html">Good practices</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../modules.html">Mouse in box functions</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">Protoplasts swelling analyzer</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">entry_exit_mouse_box.measures</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for entry_exit_mouse_box.measures</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">concurrent.futures</span> <span class="kn">import</span> <span class="n">ThreadPoolExecutor</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">import</span> <span class="nn">cv2</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="kn">import</span> <span class="n">label</span> <span class="k">as</span> <span class="n">cc_labeling</span>
+<span class="kn">from</span> <span class="nn">skimage.measure</span> <span class="kn">import</span> <span class="n">regionprops</span>
+<span class="kn">from</span> <span class="nn">scipy.ndimage</span> <span class="kn">import</span> <span class="n">center_of_mass</span>
+<span class="kn">from</span> <span class="nn">skimage.morphology</span> <span class="kn">import</span> <span class="n">erosion</span><span class="p">,</span> <span class="n">square</span>
+<span class="kn">from</span> <span class="nn">entry_exit_mouse_box.utils</span> <span class="kn">import</span> <span class="n">smooth_path_2d</span>
+
+
+<div class="viewcode-block" id="calculate_maximal_length">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.calculate_maximal_length">[docs]</a>
+<span class="k">def</span> <span class="nf">calculate_maximal_length</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+    <span class="c1"># If the only value is False, we can return 0</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">mask</span><span class="p">):</span>
+        <span class="k">return</span> <span class="mi">0</span>
+    
+    <span class="c1"># Find contours in the mask</span>
+    <span class="n">eroded_mask</span> <span class="o">=</span> <span class="n">erosion</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">square</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+    <span class="n">contours</span> <span class="o">=</span> <span class="n">mask</span> <span class="o">-</span> <span class="n">eroded_mask</span>
+    
+    <span class="c1"># In case there are multiple objects, you might want to choose the largest one or handle each separately.</span>
+    <span class="c1"># Here, we just take the largest contour for simplicity.</span>
+    
+    <span class="c1"># Calculate the convex hull of the contour</span>
+    <span class="n">hull</span> <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">convexHull</span><span class="p">(</span><span class="n">contours</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span>
+    
+    <span class="c1"># Calculate the maximal length (Feret diameter)</span>
+    <span class="n">maximal_length</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">hull</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">hull</span><span class="p">)):</span>
+            <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">hull</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">hull</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">dist</span> <span class="o">&gt;</span> <span class="n">maximal_length</span><span class="p">:</span>
+                <span class="n">maximal_length</span> <span class="o">=</span> <span class="n">dist</span>
+                <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="o">=</span> <span class="n">hull</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">hull</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+    
+    <span class="k">return</span> <span class="n">maximal_length</span></div>
+
+
+
+<div class="viewcode-block" id="MiceVisibilityProcessor">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.MiceVisibilityProcessor">[docs]</a>
+<span class="k">class</span> <span class="nc">MiceVisibilityProcessor</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculates an array indicating for each box (designated by the labels in &#39;areas&#39;) if a mouse is inside or not.</span>
+<span class="sd">    The process is realized on several threads.</span>
+<span class="sd">    The input video was saved as a mask (0=BG, 255=FG) but it requires thresholding anyway due to compression.</span>
+<span class="sd">    The areas are a grayscale image with one value per box (0=BG).</span>
+<span class="sd">    To process the presence of a mouse, we use the length of the ellipse fitted to the mouse&#39;s label.</span>
+<span class="sd">    It requires the input image to be calibrated.</span>
+<span class="sd">    The process doesn&#39;t start from the frame 0 but from the frame &#39;start&#39;.</span>
+<span class="sd">    We don&#39;t need a control structure to write in the buffer as the threads are not writing in the same place.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask_path</span><span class="p">,</span> <span class="n">areas</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">duration</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video_path</span>   <span class="o">=</span> <span class="n">mask_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duration</span>     <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">duration</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video</span>        <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">VideoCapture</span><span class="p">(</span><span class="n">mask_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lock</span>         <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regions</span>      <span class="o">=</span> <span class="n">areas</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ttl_frames</span>   <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FRAME_COUNT</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fps</span>          <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">cv2</span><span class="o">.</span><span class="n">CAP_PROP_FPS</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total frames: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ttl_frames</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FPS: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">fps</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vals</span>         <span class="o">=</span> <span class="nb">set</span><span class="p">([</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">areas</span><span class="p">)</span> <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Boxes: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">n_boxes</span>      <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">reader_pos</span>   <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_area</span>     <span class="o">=</span> <span class="n">ma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span>        <span class="o">=</span> <span class="n">start</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Starters: </span><span class="si">{</span><span class="n">start</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span>   <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n_boxes</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ttl_frames</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">int8</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">centroids</span>    <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">ttl_frames</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">n_boxes</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">in_out_count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">n_boxes</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">uint16</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span>     <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MiceVisibilityProcessor.read_frames">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.MiceVisibilityProcessor.read_frames">[docs]</a>
+    <span class="k">def</span> <span class="nf">read_frames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">frames_count</span><span class="o">=</span><span class="mi">32</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">lock</span><span class="p">:</span>
+            <span class="n">frames</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">p1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader_pos</span>
+            <span class="n">p2</span> <span class="o">=</span> <span class="n">p1</span> <span class="o">+</span> <span class="n">frames_count</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">reader_pos</span> <span class="o">=</span> <span class="n">p2</span> 
+
+            <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">frames_count</span><span class="p">):</span>
+                <span class="n">ret</span><span class="p">,</span> <span class="n">frame</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">ret</span><span class="p">:</span>
+                    <span class="k">break</span>
+                <span class="n">frames</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">frame</span><span class="p">)</span>
+            
+            <span class="k">return</span> <span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">),</span> <span class="n">frames</span></div>
+
+
+
+<div class="viewcode-block" id="MiceVisibilityProcessor.process_visibility_pos">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.MiceVisibilityProcessor.process_visibility_pos">[docs]</a>
+    <span class="k">def</span> <span class="nf">process_visibility_pos</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">,</span> <span class="n">frames</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">frame</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">frames</span><span class="p">):</span>
+            <span class="n">mask</span>  <span class="o">=</span> <span class="n">cv2</span><span class="o">.</span><span class="n">cvtColor</span><span class="p">(</span><span class="n">frame</span><span class="p">,</span> <span class="n">cv2</span><span class="o">.</span><span class="n">COLOR_BGR2GRAY</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">127</span>
+            <span class="n">mask</span>  <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">float32</span><span class="p">)</span>
+            <span class="n">mask</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">regions</span>
+            <span class="n">mask</span>  <span class="o">=</span> <span class="n">mask</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">uint8</span><span class="p">)</span>
+
+            <span class="n">vals</span><span class="p">,</span> <span class="n">count</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">unique</span><span class="p">(</span><span class="n">mask</span><span class="p">,</span> <span class="n">return_counts</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="c1"># Bundle values in dict</span>
+            <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">vals</span><span class="p">,</span> <span class="n">count</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">v</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">values</span><span class="p">[</span><span class="n">v</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span>
+            <span class="c1"># Adding missing values</span>
+            <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">vals</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">values</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">box</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">values</span><span class="p">[</span><span class="n">box</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="c1"># Setting visibility</span>
+            <span class="k">for</span> <span class="n">v</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">values</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">[</span><span class="n">v</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">v</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">c</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_area</span><span class="p">:</span> <span class="c1"># Too small to be considered</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">v</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">v</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">1</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="n">batch</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">i</span><span class="p">,</span> <span class="n">v</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">center_of_mass</span><span class="p">(</span><span class="n">mask</span> <span class="o">==</span> <span class="n">v</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="MiceVisibilityProcessor.worker">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.MiceVisibilityProcessor.worker">[docs]</a>
+    <span class="k">def</span> <span class="nf">worker</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="n">batch</span><span class="p">,</span> <span class="n">frames</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">read_frames</span><span class="p">()</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">frames</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process_visibility_pos</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">frames</span><span class="p">)</span></div>
+
+
+
+    <span class="c1"># This function takes the array containing the centroid for each box and smooth the path</span>
+    <span class="c1"># It skips the moments where the mouse is hidden, represented by (-1, -1)</span>
+<div class="viewcode-block" id="MiceVisibilityProcessor.smooth_centroids">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.MiceVisibilityProcessor.smooth_centroids">[docs]</a>
+    <span class="k">def</span> <span class="nf">smooth_centroids</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_boxes</span><span class="p">):</span>
+            <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">[:,</span> <span class="n">box</span><span class="p">]</span>
+            <span class="n">smoothed_path</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+                    <span class="n">smoothed_path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+            <span class="n">smoothed_path</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">smoothed_path</span><span class="p">)</span>
+            <span class="n">smoothed_path</span> <span class="o">=</span> <span class="n">smooth_path_2d</span><span class="p">(</span><span class="n">smoothed_path</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">p</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">smoothed_path</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">box</span><span class="p">]</span> <span class="o">=</span> <span class="n">p</span></div>
+
+
+
+<div class="viewcode-block" id="MiceVisibilityProcessor.fix_visibility">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.MiceVisibilityProcessor.fix_visibility">[docs]</a>
+    <span class="k">def</span> <span class="nf">fix_visibility</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">min_session</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fps</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_boxes</span><span class="p">):</span>
+            <span class="n">swaps</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="n">end_of_video</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">[</span><span class="n">box</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ttl_frames</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ttl_frames</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">box</span><span class="p">,</span> <span class="n">f</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">f</span> <span class="o">&gt;=</span> <span class="n">end_of_video</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">box</span><span class="p">,</span> <span class="n">f</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">2</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="n">box</span><span class="p">]</span>  <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="c1"># State transition, the next session starts at (f+1)</span>
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">box</span><span class="p">,</span> <span class="n">f</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">box</span><span class="p">,</span> <span class="n">f</span><span class="o">+</span><span class="mi">1</span><span class="p">])</span> <span class="ow">or</span> <span class="p">(</span><span class="n">f</span> <span class="o">==</span> <span class="n">end_of_video</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+                    <span class="c1"># It&#39;s the first transition, we don&#39;t care about the duration of the session</span>
+                    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">swaps</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">swaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+                        <span class="k">continue</span>
+                    <span class="c1"># We are in an unstable state.</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="n">f</span> <span class="o">+</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">swaps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="n">min_session</span><span class="p">):</span>
+                        <span class="n">swaps</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">f</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span> <span class="k">if</span> <span class="p">(</span><span class="n">f</span> <span class="o">&lt;</span> <span class="n">end_of_video</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="k">else</span> <span class="mi">2</span><span class="p">))</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">swaps</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">swaps</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]):</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">box</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">box</span><span class="p">]</span>  <span class="o">=</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+                        <span class="n">swaps</span> <span class="o">=</span> <span class="p">[</span><span class="n">f</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="MiceVisibilityProcessor.start_processing">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.MiceVisibilityProcessor.start_processing">[docs]</a>
+    <span class="k">def</span> <span class="nf">start_processing</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_workers</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">cpu_count</span><span class="p">()):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;(1/3) Processing visibility...&quot;</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">ThreadPoolExecutor</span><span class="p">(</span><span class="n">max_workers</span><span class="o">=</span><span class="n">num_workers</span><span class="p">)</span> <span class="k">as</span> <span class="n">executor</span><span class="p">:</span>
+            <span class="n">futures</span> <span class="o">=</span> <span class="p">[</span><span class="n">executor</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">worker</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_workers</span><span class="p">)]</span>
+            <span class="k">for</span> <span class="n">future</span> <span class="ow">in</span> <span class="n">futures</span><span class="p">:</span>
+                <span class="n">future</span><span class="o">.</span><span class="n">result</span><span class="p">()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;(2/3) Processing number of in/out...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fix_visibility</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">process_n_in_out</span><span class="p">()</span>
+        <span class="c1"># self.smooth_centroids()</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;(3/3) Processing sessions time and distance...&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">process_sessions</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">release_resources</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="MiceVisibilityProcessor.release_resources">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.MiceVisibilityProcessor.release_resources">[docs]</a>
+    <span class="k">def</span> <span class="nf">release_resources</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">video</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span></div>
+
+    
+
+<div class="viewcode-block" id="MiceVisibilityProcessor.process_n_in_out">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.MiceVisibilityProcessor.process_n_in_out">[docs]</a>
+    <span class="k">def</span> <span class="nf">process_n_in_out</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ttl_frames</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_boxes</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">box</span><span class="p">,</span> <span class="n">f</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">box</span><span class="p">,</span> <span class="n">f</span><span class="p">]</span> <span class="o">!=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">box</span><span class="p">,</span> <span class="n">f</span><span class="o">+</span><span class="mi">1</span><span class="p">]:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">in_out_count</span><span class="p">[</span><span class="n">box</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+
+
+<div class="viewcode-block" id="MiceVisibilityProcessor.process_sessions">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.MiceVisibilityProcessor.process_sessions">[docs]</a>
+    <span class="k">def</span> <span class="nf">process_sessions</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        We call &#39;session&#39; the span of time during which the mouse is hidden or visible.</span>
+<span class="sd">        For each box, a video is a succession of sessions, alternating between hidden and visible.</span>
+<span class="sd">        During a session, the mouse is either hidden or visible.</span>
+<span class="sd">        A session is defined by a duration (in seconds) and a distance (in pixels).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_boxes</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">in_out_count</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+        <span class="c1"># session[box, session_index] = (frame_start, duration (s), duration (f), distance)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="nb">float</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="o">.</span><span class="n">fill</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+        <span class="c1"># (starting frame of the session, visibility for this session, session index, session distance)</span>
+        <span class="n">state</span> <span class="o">=</span> <span class="p">[(</span><span class="mi">0</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_boxes</span><span class="p">)]</span>
+        <span class="n">eov</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_boxes</span><span class="p">):</span>
+            <span class="n">eov</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ttl_frames</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">box</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">n_boxes</span><span class="p">):</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">box</span><span class="p">,</span> <span class="n">f</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">box</span><span class="p">,</span> <span class="n">f</span><span class="p">]</span> <span class="o">==</span> <span class="o">-</span><span class="mi">2</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">eov</span><span class="p">[</span><span class="n">box</span><span class="p">]:</span>
+                            <span class="k">continue</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">eov</span><span class="p">[</span><span class="n">box</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">continue</span>
+                <span class="k">if</span> <span class="n">state</span><span class="p">[</span><span class="n">box</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="c1"># Very first session for this box.</span>
+                    <span class="n">state</span><span class="p">[</span><span class="n">box</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">box</span><span class="p">,</span> <span class="n">f</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+                    <span class="k">continue</span>
+                <span class="c1"># When we change of visibility status (or if we reached the last frame), we end the current session.</span>
+                <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">box</span><span class="p">,</span> <span class="n">f</span><span class="p">]</span> <span class="o">!=</span> <span class="n">state</span><span class="p">[</span><span class="n">box</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="ow">or</span> <span class="p">(</span><span class="n">eov</span><span class="p">[</span><span class="n">box</span><span class="p">]):</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">visibility</span><span class="p">[</span><span class="n">box</span><span class="p">,</span> <span class="n">f</span><span class="p">]</span>
+                    <span class="n">n_frames</span> <span class="o">=</span> <span class="n">f</span> <span class="o">-</span> <span class="n">state</span><span class="p">[</span><span class="n">box</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">duration</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_frames</span><span class="p">)</span> <span class="o">/</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fps</span><span class="p">)</span>
+                    <span class="n">row</span> <span class="o">=</span> <span class="n">box</span>
+                    <span class="n">col</span> <span class="o">=</span> <span class="n">state</span><span class="p">[</span><span class="n">box</span><span class="p">][</span><span class="mi">2</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">sessions</span><span class="p">[</span><span class="n">row</span><span class="p">,</span> <span class="n">col</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="n">box</span><span class="p">][</span><span class="mi">0</span><span class="p">]),</span> <span class="n">duration</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="n">n_frames</span><span class="p">),</span> <span class="n">state</span><span class="p">[</span><span class="n">box</span><span class="p">][</span><span class="mi">3</span><span class="p">])</span>
+                    <span class="n">state</span><span class="p">[</span><span class="n">box</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">v</span><span class="p">,</span> <span class="n">col</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="c1"># We accumulate the distance.</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">f</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">box</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="mf">0.0</span><span class="p">:</span>
+                        <span class="n">state</span><span class="p">[</span><span class="n">box</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">state</span><span class="p">[</span><span class="n">box</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">state</span><span class="p">[</span><span class="n">box</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">state</span><span class="p">[</span><span class="n">box</span><span class="p">][</span><span class="mi">2</span><span class="p">],</span> <span class="n">state</span><span class="p">[</span><span class="n">box</span><span class="p">][</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="n">box</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">centroids</span><span class="p">[</span><span class="n">f</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">box</span><span class="p">]))</span></div>
+</div>
+
+
+
+<span class="c1"># # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #</span>
+
+
+<span class="kn">from</span> <span class="nn">qtpy.QtCore</span> <span class="kn">import</span> <span class="n">QThread</span><span class="p">,</span> <span class="n">QObject</span><span class="p">,</span> <span class="n">QTimer</span><span class="p">,</span> <span class="n">Qt</span><span class="p">,</span> <span class="n">Signal</span><span class="p">,</span> <span class="n">Slot</span>
+<span class="kn">from</span> <span class="nn">PyQt5.QtCore</span> <span class="kn">import</span> <span class="n">pyqtSignal</span>
+
+
+<div class="viewcode-block" id="QtWorkerMVP">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.QtWorkerMVP">[docs]</a>
+<span class="k">class</span> <span class="nc">QtWorkerMVP</span><span class="p">(</span><span class="n">QObject</span><span class="p">):</span>
+
+    <span class="n">measures_ready</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mask_path</span><span class="p">,</span> <span class="n">areas</span><span class="p">,</span> <span class="n">ma</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">duration</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mask_path</span> <span class="o">=</span> <span class="n">mask_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">areas</span>     <span class="o">=</span> <span class="n">areas</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_area</span>  <span class="o">=</span> <span class="n">ma</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span>     <span class="o">=</span> <span class="n">start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duration</span>  <span class="o">=</span> <span class="n">duration</span>
+
+<div class="viewcode-block" id="QtWorkerMVP.run">
+<a class="viewcode-back" href="../../mouse_in_box.html#entry_exit_mouse_box.QtWorkerMVP.run">[docs]</a>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">mvp</span> <span class="o">=</span> <span class="n">MiceVisibilityProcessor</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">areas</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_area</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">start</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
+        <span class="n">mvp</span><span class="o">.</span><span class="n">start_processing</span><span class="p">()</span>
+
+        <span class="n">visibility</span> <span class="o">=</span> <span class="n">mvp</span><span class="o">.</span><span class="n">visibility</span>
+        <span class="n">in_out_count</span> <span class="o">=</span> <span class="n">mvp</span><span class="o">.</span><span class="n">in_out_count</span>
+        <span class="n">sessions</span> <span class="o">=</span> <span class="n">mvp</span><span class="o">.</span><span class="n">sessions</span>
+        <span class="n">centroids</span> <span class="o">=</span> <span class="n">mvp</span><span class="o">.</span><span class="n">centroids</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">measures_ready</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">visibility</span><span class="p">,</span> <span class="n">in_out_count</span><span class="p">,</span> <span class="n">sessions</span><span class="p">,</span> <span class="n">centroids</span><span class="p">)</span></div>
+</div>
+
+
+
+
+<span class="c1"># # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #</span>
+    
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">tifffile</span>
+
+    <span class="n">mask_path</span> <span class="o">=</span> <span class="s2">&quot;/home/benedetti/Documents/projects/25-entry-exit-mouse-monitor/data-samples/mask-WIN_20210830_11_11_50_Pro.avi&quot;</span>
+    <span class="n">start_f</span>   <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="mi">1189</span><span class="p">,</span> 
+        <span class="mi">2</span><span class="p">:</span> <span class="mi">1189</span><span class="p">,</span> 
+        <span class="mi">3</span><span class="p">:</span> <span class="mi">1189</span>
+    <span class="p">}</span>
+    <span class="n">areas_path</span> <span class="o">=</span> <span class="s2">&quot;/home/benedetti/Documents/projects/25-entry-exit-mouse-monitor/data-samples/areas-WIN_20210830_11_11_50_Pro.tif&quot;</span>
+    <span class="n">areas</span> <span class="o">=</span> <span class="n">tifffile</span><span class="o">.</span><span class="n">imread</span><span class="p">(</span><span class="n">areas_path</span><span class="p">)</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="mf">0.13153348</span>
+    <span class="n">unit</span> <span class="o">=</span> <span class="s2">&quot;cm&quot;</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+    <span class="n">mvp</span> <span class="o">=</span> <span class="n">MiceVisibilityProcessor</span><span class="p">(</span><span class="n">mask_path</span><span class="p">,</span> <span class="n">areas</span><span class="p">,</span> <span class="mi">80</span><span class="p">,</span> <span class="n">start_f</span><span class="p">)</span>
+    <span class="n">mvp</span><span class="o">.</span><span class="n">start_processing</span><span class="p">()</span>
+    <span class="n">duration</span> <span class="o">=</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span> <span class="o">-</span> <span class="n">start</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processing took </span><span class="si">{</span><span class="n">duration</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> seconds.&quot;</span><span class="p">)</span>
+
+    <span class="n">sessions</span> <span class="o">=</span> <span class="n">mvp</span><span class="o">.</span><span class="n">sessions</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">savetxt</span><span class="p">(</span><span class="s2">&quot;/home/benedetti/Desktop/sessions.csv&quot;</span><span class="p">,</span> <span class="n">sessions</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">delimiter</span><span class="o">=</span><span class="s2">&quot;,&quot;</span><span class="p">,</span> <span class="n">fmt</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">%.3f</span><span class="s2">&quot;</span><span class="p">)</span>
+    
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Clément H. Benedetti.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

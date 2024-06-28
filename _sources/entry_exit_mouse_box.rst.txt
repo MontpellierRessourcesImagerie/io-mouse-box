@@ -1,0 +1,23 @@
+entry\_exit\_mouse\_box package
+===============================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   entry_exit_mouse_box.mask_from_video
+   entry_exit_mouse_box.measures
+   entry_exit_mouse_box.media_manager
+   entry_exit_mouse_box.results_table
+   entry_exit_mouse_box.utils
+   entry_exit_mouse_box.video_mean_processor
+
+Module contents
+---------------
+
+.. automodule:: entry_exit_mouse_box
+   :members:
+   :undoc-members:
+   :show-inheritance:

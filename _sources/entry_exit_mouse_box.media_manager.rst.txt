@@ -1,0 +1,7 @@
+entry\_exit\_mouse\_box.media\_manager module
+=============================================
+
+.. automodule:: entry_exit_mouse_box.media_manager
+   :members:
+   :undoc-members:
+   :show-inheritance:

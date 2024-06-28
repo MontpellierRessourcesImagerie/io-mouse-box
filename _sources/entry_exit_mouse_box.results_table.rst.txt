@@ -1,0 +1,7 @@
+entry\_exit\_mouse\_box.results\_table module
+=============================================
+
+.. automodule:: entry_exit_mouse_box.results_table
+   :members:
+   :undoc-members:
+   :show-inheritance:
